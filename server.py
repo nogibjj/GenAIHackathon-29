@@ -4,10 +4,13 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+from flask_cors import CORS
+
 
 # Set up your OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 app = Flask(__name__)
+cors = CORS(app)
 
 
 def get_completion(prompt, model="gpt-3.5-turbo"):
@@ -30,8 +33,10 @@ def index():
 # get general question
 @app.route("/chat", methods=["POST"])
 def get_answer():
+    # print(request.data)
+    # print(type(request.data))
     """grab quick answer frm this"""
-    prompt = request.form["prompt"]
+    prompt = request.json["question"]
     response = openai.Completion.create(
         engine="text-davinci-002",
         prompt=prompt,
