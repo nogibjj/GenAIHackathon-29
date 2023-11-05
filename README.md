@@ -29,8 +29,10 @@ Rename the env.example file to .env and add your OpenAI API key
 ```
 streamlit run About.py --client.showErrorDetails=false
 ```
+**6. Application Overview**
+Technical - We used multiple APIs to integrate our tools functionality together. We combined the front end with the back end to create a unique chatbot experience that caters to nutritious requirements of an individual. 
 
-
+Novelty - It is one of the unique tools that combine AI and domain understanding of nutrition to build an interactive platform. 
 
 ## Future Project Scope:
 
