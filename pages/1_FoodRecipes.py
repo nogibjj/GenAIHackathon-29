@@ -7,6 +7,8 @@ import folium
 from streamlit_folium import st_folium
 import streamlit_ext as ste
 from streamlit_login_auth_ui.widgets import __login__
+import re
+
 
 load_dotenv()
 
@@ -40,7 +42,7 @@ def get_completion(messages, model="gpt-3.5-turbo-16k"):
 
 def main():
     """main entry point"""
-    st.title("Figure out a good name")
+    st.title("Nutri AI, Your Personal Nutritionist")
 
     # Get user input using a text input field
     text = st.text_input("Get your next healthy recipe:")
@@ -87,7 +89,12 @@ def main():
         # Display the response in the desired format
         formatted_response = response.split("\n")
         # Get the image URL using the 'dalle' function
-        image_url = dalle(formatted_response[0])
+        # Define the regular expression pattern
+        pattern = r"Dish Name: (.+)"
+        # Use re.findall to find all matches of the pattern
+        matches = re.findall(pattern, response)
+        print(matches)
+        image_url = dalle(matches[0])
 
         col1, col2 = st.columns(2)
 
@@ -103,9 +110,7 @@ def main():
 
             # Provide a download link
             # Use st.experimental_singleton to prevent re-run
-            ste.download_button(
-                "Download recipe!", response, formatted_response[0] + ".txt"
-            )
+            ste.download_button("Download recipe!", response, "dish-info.txt")
 
 
 if __name__ == "__main__":
@@ -121,6 +126,5 @@ if __name__ == "__main__":
     )
 
     LOGGED_IN = __login__obj.build_login_ui()
-
     if LOGGED_IN == True:
         main()

@@ -27,3 +27,4 @@ argon2_cffi
 cffi
 pip
 setuptools
+streamlit-lottie

@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_login_auth_ui.widgets import __login__
 from dotenv import load_dotenv
 import os
+from streamlit_lottie import st_lottie
 
 load_dotenv()
 
@@ -19,10 +20,16 @@ __login__obj = __login__(
 LOGGED_IN = __login__obj.build_login_ui()
 
 if LOGGED_IN == True:
-    st.write("# Welcome to Insert name Here! 👋")
+    st.write(
+        "<h1 style='color: white; font-size: 24px; font-weight: bold;'>Meet your Personal AI Nutritionist & Chef-bot 👋</h1>",
+        unsafe_allow_html=True,
+    )
 
-    st.markdown(
-        """
-        Our motivation for creating an AI chatbot that serves as our chief, recipe generator, and meal planner stems from our desire for convenient, personalized, and enjoyable cooking experiences. By providing the chatbot with our dietary requirements, available ingredients, and time constraints, we aim to receive tailored recipe suggestions that suit our needs and preferences, enhancing our daily meals. Additionally, the chatbot's capability to recommend nearby supermarkets and grocery options based on our information not only simplifies the shopping process but also promotes healthy and efficient meal planning. Looking ahead, we envision the chatbot evolving to assist with meal delivery or pickup orders, further streamlining our culinary journey and making cooking a delightful and stress-free endeavor.
-        """
+    st.write(
+        "<h1 style='text-align: center; color: red; font-size: 92px; font-family: cursive, 'Dancing Script', cursive; font-weight: bold;'>Nutri AI</h1>",
+        unsafe_allow_html=True,
+    )
+
+    st_lottie(
+        "https://lottie.host/4bed853f-afa3-4536-905d-0af860bbdefc/Zajmp9Z8LS.json"
     )
