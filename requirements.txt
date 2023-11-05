@@ -22,3 +22,4 @@ streamlit_js_eval
 streamlit-folium
 folium
 streamlit-ext
+streamlit-login-auth-ui
