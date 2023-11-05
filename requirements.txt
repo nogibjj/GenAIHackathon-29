@@ -21,3 +21,4 @@ googlemaps
 streamlit_js_eval
 streamlit-folium
 folium
+streamlit-ext
