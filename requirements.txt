@@ -23,3 +23,7 @@ streamlit-folium
 folium
 streamlit-ext
 streamlit-login-auth-ui
+argon2_cffi
+cffi
+pip
+setuptools

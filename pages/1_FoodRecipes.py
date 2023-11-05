@@ -3,26 +3,18 @@ from dotenv import load_dotenv
 import os
 import openai
 import pandas as pd
-import googlemaps
-from streamlit_js_eval import get_geolocation
 import folium
 from streamlit_folium import st_folium
 import streamlit_ext as ste
+from streamlit_login_auth_ui.widgets import __login__
 
 load_dotenv()
 
 # Set up your OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Initialize conversation history as an empty list
 conversation_history = []
-
-if "text" not in st.session_state:
-    st.session_state.text = ""
-
-if "location" not in st.session_state:
-    st.session_state.location = None
 
 
 def miles_to_meter(miles):
@@ -34,25 +26,6 @@ def dalle(input_promt):
     """gets an image with openai"""
     response = openai.Image.create(prompt=input_promt, n=1, size="256x256")
     return response["data"][0]["url"]
-
-
-def get_supermarkets(loc, search_string="supermarket", distance=miles_to_meter(2)):
-    """grabs nearest supermakets"""
-    business_list = []
-    map_client = googlemaps.Client(GOOGLE_API_KEY)
-    response = map_client.places_nearby(
-        location=loc, keyword=search_string, name="supermarket", radius=distance
-    )
-    business_list.extend(response.get("results"))
-
-    df = pd.DataFrame(business_list)
-    df["url"] = "http://www.google.com/maps/place/?q=place_id:" + df["place_id"]
-    df.sort_values("rating", inplace=True, ascending=False)
-    lat, lng = (
-        df["geometry"][1]["location"]["lat"],
-        df["geometry"][1]["location"]["lng"],
-    )
-    return lat, lng
 
 
 def get_completion(messages, model="gpt-3.5-turbo-16k"):
@@ -67,38 +40,45 @@ def get_completion(messages, model="gpt-3.5-turbo-16k"):
 
 def main():
     """main entry point"""
-    st.set_page_config(layout="wide")
     st.title("Figure out a good name")
 
     # Get user input using a text input field
-    st.session_state.text = st.text_input(
-        "Enter your prompt here:", st.session_state.text
-    )
-
-    st.session_state.location = get_geolocation()
+    text = st.text_input("Get your next healthy recipe:")
 
     # Check if the user has entered a prompt
-    if st.session_state.text:
-        # Display the prompt
-        st.write(f"You entered: {st.session_state.text}")
-
+    if text:
         # Perform actions similar to your Flask app
         # need to give a better prompt
         prompt_answer = f"""
-        Perform the following actions:
-            1 - Find the name of a specific healthy dish that is popular in recipe books and list all the ingredients.
-            2 - Answer questions in the formation part
-            3 - For the `Recipe and Instructions` part, we want the formation to be:
+        See if the input provided is relevant and if not assume a healthy dish by yourself and proceed. No need to write anything at this stage.
+        If the specific dish is not clear, assume a healthy dish and proceed and write \
+        'We want you to eat healthy and here is our recommendation for you.' Use the assumed dish and directly skip to output.
 
-                Using the following format and only respond with this format. You must give a recipe, you cannot say you cannot find one.:
-    
-                **<find a dish name closely matching the name of the dish>**
-                **Estimated Cost:** <Estimated cost of this dish denoted in U.S. dollars>
-                **Estimated Time:** <Estimated time cost of this dish>
-                **Calorie:** <Estimated Calorie of this dish>
-                **Recipe and Instructions:** <>
-                **Ingredients Summary:** <list of requirements based on recipe>
-        ```{st.session_state.text}```
+        
+        Perform the following actions but make sure not to display them in output:
+            1 - If any ingredient is not healthy, tell them that ingredient is not healthy \
+                Make sure to memorize healthy ingredients mentioned in the input. If nothing is mentioned or no ingredient is healthy, assume a healthy dish and proceed.
+            2 - Look up all memories and summarize the list of ingredients which are healthy along with the healthy ingredients.
+            3 - Provide the name of a specific healthy dish that is popular in recipe books and list all the ingredients.
+            4 - Answer questions in the formation part, if not asked skip the step
+            5 - Make the cost as low as possible for the best meal
+            6 - For the `Recipe and Instructions` part, we want the formation to be:   
+
+            
+            Only the following output has to be displayed and nothing else before this should be displayed in the output. Please think carefully before sending your reccomendation back. Make sure all the following is displayed.
+            Use the following format below and only take this format in the same order as mentioned below, if no instruction is given, assume some healthy dish and proceed.:\
+            
+    .       Dish Name : <Provide a dish name closely matching the name of the dish>
+            Ingredients Summary: <list of requirements>
+            Estimated Cost: <Estimated cost of this dish denoted in U.S. dollars and give dollar sign>
+            Estimated Time: <Estimated time of this dish>
+            Calorie: <Estimated Calorie of this dish>
+            Recipe and Instructions: <>
+            Info: <Suggest how does this dish helps with the requirements mentioned if they are mentioned else skip this step>
+
+
+        
+        ```{text}```
         """
 
         conversation_history.append({"role": "user", "content": prompt_answer})
@@ -109,26 +89,38 @@ def main():
         # Get the image URL using the 'dalle' function
         image_url = dalle(formatted_response[0])
 
-        # Create three columns
-        if st.session_state.location:
-            col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
 
-            # Column 1 - Placeholder for some content
-            with col1:
-                # Display the image
-                st.image(image_url, use_column_width=True)
+        # Column 1 - Placeholder for some content
+        with col1:
+            # Display the image
+            st.image(image_url, use_column_width=True)
 
-            # Column 2 - Placeholder for the response from the prompt
-            with col2:
-                for line in formatted_response:
-                    st.markdown(line)
+        # Column 2 - Placeholder for the response from the prompt
+        with col2:
+            for line in formatted_response:
+                st.markdown(line)
 
-                # Provide a download link
-                # Use st.experimental_singleton to prevent re-run
-                ste.download_button(
-                    "Download recipe!", response, formatted_response[0] + ".txt"
-                )
+            # Provide a download link
+            # Use st.experimental_singleton to prevent re-run
+            ste.download_button(
+                "Download recipe!", response, formatted_response[0] + ".txt"
+            )
 
 
 if __name__ == "__main__":
-    main()
+    __login__obj = __login__(
+        auth_token=os.getenv("CORIAR"),
+        company_name="Tianji",
+        width=200,
+        height=250,
+        logout_button_name="Logout",
+        hide_menu_bool=False,
+        hide_footer_bool=False,
+        lottie_url="https://assets2.lottiefiles.com/packages/lf20_jcikwtux.json",
+    )
+
+    LOGGED_IN = __login__obj.build_login_ui()
+
+    if LOGGED_IN == True:
+        main()
